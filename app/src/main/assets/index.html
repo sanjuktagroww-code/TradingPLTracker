@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading P&L Tracker</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090d14;color:#f1f5f9;font-family:Arial,sans-serif;padding:18px}
+header{padding:18px 0;border-bottom:1px solid #293244}
+h1{font-size:25px;margin:0;color:#fff}
+.sub{color:#8995a8;font-size:12px;margin-top:8px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.card{background:#151e2b;padding:17px;border:1px solid #283448;border-radius:13px}
+.card small{color:#9aa8ba}
+.card h2{margin:10px 0 0;font-size:22px}
+.green{color:#20d69a}.red{color:#ff647c}
+button{background:#1b293a;color:white;border:1px solid #35465d;border-radius:9px;padding:12px;font-weight:bold}
+.primary{background:#087fba;border:0}
+input,select{width:100%;padding:13px;margin:6px 0 13px;background:#111a27;color:white;border:1px solid #34445b;border-radius:8px}
+label{font-size:13px;color:#aab7c9}
+h3{margin-top:25px}
+.panel{background:#111a27;padding:16px;border-radius:13px;border:1px solid #283448}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.trade{background:#151e2b;border:1px solid #29374b;border-radius:10px;padding:13px;margin:10px 0}
+.trade p{font-size:13px;color:#aab7c9}
+</style>
+</head>
+<body>
+<header>
+<h1>Trading P&L Tracker</h1>
+<div class="sub">PERSONAL TRADING DASHBOARD</div>
+</header>
+
+<div class="cards">
+<div class="card"><small>Total P&L</small><h2 id="total">₹0</h2></div>
+<div class="card"><small>Trades</small><h2 id="count">0</h2></div>
+<div class="card"><small>Profit</small><h2 class="green" id="profit">₹0</h2></div>
+<div class="card"><small>Loss</small><h2 class="red" id="loss">₹0</h2></div>
+</div>
+
+<div class="actions">
+<button class="primary" onclick="showForm()">+ Add Trade</button>
+<button onclick="exportData()">Backup JSON</button>
+<button onclick="document.getElementById('restore').click()">Restore</button>
+<input id="restore" type="file" accept=".json" hidden onchange="restoreData(event)">
+</div>
+
+<div id="form" class="panel" hidden>
+<h3>New Trade</h3>
+<label>Date</label><input id="date" type="date">
+<label>Member</label>
+<select id="member">
+<option>Amit</option><option>Rudra Pratap (Student Forever)</option>
+<option>Rajesh</option><option>Samarth</option>
+<option>Rahul</option><option>John Jeevan</option>
+<option>Shekhar</option><option>Samir Dahiya</option>
+</select>
+<label>Instrument</label><select id="instrument"><option>NIFTY</option><option>BANKNIFTY</option><option>SENSEX</option><option>GOLD</option><option>SILVER</option></select>
+<label>Type</label><select id="type"><option>CE</option><option>PE</option><option>FUTURES</option></select>
+<label>Position</label><select id="position"><option>BUY</option><option>SELL</option></select>
+<label>Strike</label><input id="strike" type="number" placeholder="Strike price">
+<label>Expiry</label><input id="expiry" type="date">
+<label>Entry Price</label><input id="entry" type="number" step="0.01">
+<label>Exit Price (blank = OPEN)</label><input id="exit" type="number" step="0.01">
+<label>Lots</label><input id="lots" type="number" value="1">
+<label>Lot Size</label><input id="size" type="number" value="65">
+<label>Charges</label><input id="charges" type="number" value="10">
+<div class="actions">
+<button class="primary" onclick="saveTrade()">Save Trade</button>
+<button onclick="document.getElementById('form').hidden=true">Cancel</button>
+</div>
+</div>
+
+<h3>Trade History</h3>
+<div id="history"></div>
+
+<script>
+let trades=JSON.parse(localStorage.getItem('trades')||'[]');
+function money(n){return '₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function pnl(t){
+if(t.exit===''||t.exit===null)return 0;
+let direction=t.position==='BUY'?1:-1;
+return (Number(t.exit)-Number(t.entry))*direction*Number(t.lots)*Number(t.size)-Number(t.charges);
+}
+function showForm(){
+document.getElementById('form').hidden=false;
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
+}
+function saveTrade(){
+let ids=['date','member','instrument','type','position','strike','expiry','entry','exit','lots','size','charges'];
+let t={};
+ids.forEach(id=>t[id]=document.getElementById(id).value);
+if(!t.date||!t.entry||!t.lots||!t.size){alert('Fill required fields');return}
+t.id=Date.now();
+trades.unshift(t);
+localStorage.setItem('trades',JSON.stringify(trades));
+document.getElementById('form').hidden=true;
+render();
+}
+function render(){
+let total=0,profit=0,loss=0;
+trades.forEach(t=>{
+let p=pnl(t);
+if(t.exit!==''&&t.exit!==null){total+=p;if(p>=0)profit+=p;else loss+=p}
+});
+document.getElementById('total').textContent=money(total);
+document.getElementById('total').className=total>=0?'green':'red';
+document.getElementById('profit').textContent=money(profit);
+document.getElementById('loss').textContent=money(loss);
+document.getElementById('count').textContent=trades.length;
+document.getElementById('history').innerHTML=trades.map(t=>{
+let p=pnl(t),open=t.exit===''||t.exit===null;
+return `<div class="trade">
+<strong>${t.instrument} ${t.type} ${t.position}</strong>
+<p>${t.member} | ${t.date} | Strike: ${t.strike||'-'}</p>
+<p>Entry: ${t.entry} | Exit: ${open?'OPEN':t.exit}</p>
+<p>Lots: ${t.lots} × ${t.size}</p>
+<strong class="${p>=0?'green':'red'}">${open?'OPEN':money(p)}</strong>
+<button onclick="removeTrade(${t.id})" style="float:right">Delete</button>
+</div>`;
+}).join('')||'<p>No trades recorded yet.</p>';
+}
+function removeTrade(id){
+if(confirm('Delete this trade?')){
+trades=trades.filter(t=>t.id!==id);
+localStorage.setItem('trades',JSON.stringify(trades));render();
+}}
+function exportData(){
+let blob=new Blob([JSON.stringify(trades,null,2)],{type:'application/json'});
+let a=document.createElement('a');a.href=URL.createObjectURL(blob);
+a.download='TradingPLBackup.json';a.click();URL.revokeObjectURL(a.href);
+}
+function restoreData(e){
+let f=e.target.files[0];if(!f)return;
+let r=new FileReader();
+r.onload=()=>{try{
+let d=JSON.parse(r.result);if(!Array.isArray(d))throw Error();
+trades=d;localStorage.setItem('trades',JSON.stringify(trades));render();
+alert('Backup restored');
+}catch(err){alert('Invalid backup file')}};
+r.readAsText(f);
+}
+render();
+</script>
+</body>
+</html>
