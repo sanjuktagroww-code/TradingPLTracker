@@ -1,131 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#090d14">
+<meta name="theme-color" content="#080d16">
 <title>Trading P&L Tracker</title>
-
 <style>
+:root{--bg:#080d16;--panel:#111a29;--line:#26364d;--text:#edf3fc;--muted:#91a1b8;--blue:#3978f6;--green:#20c997;--red:#ff6177}
 *{box-sizing:border-box}
-body{
- margin:0;background:#090d14;color:#f1f5f9;
- font-family:Arial,sans-serif;padding:16px;
-}
-header{padding:12px 0 20px}
-h1{font-size:25px;margin:0 0 7px}
-.sub{color:#8995a8;font-size:12px}
-h2{font-size:17px;margin:0 0 15px}
-h3{font-size:14px;margin:20px 0 10px}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.card,.panel{
- background:#111a27;border:1px solid #283448;
- border-radius:13px;padding:15px;margin-bottom:12px;
-}
-.card small{color:#9aa8ba}
-.card h2{font-size:22px;margin:9px 0 0}
-.green{color:#20d69a!important}
-.red{color:#ff647c!important}
-.muted{color:#8c9aab}
-label{display:block;font-size:12px;color:#aab7c9;margin:12px 0 6px}
-input,select{
- width:100%;padding:12px;background:#0b121c;
- color:white;border:1px solid #34445b;
- border-radius:9px;font-size:14px;
-}
-button{
- background:#202d40;color:white;border:1px solid #40516a;
- border-radius:9px;padding:12px;font-weight:bold;
- font-size:13px;cursor:pointer;
-}
-button.primary{background:#087fba;border:0}
-button.danger{background:#49202a;border-color:#713443}
-button.success{background:#087a55;border:0}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-.actions button{flex:1}
-.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+body{margin:0;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:9px;padding:11px 14px;background:#26364d;color:white;font-weight:bold}
+button.primary{background:var(--blue)}
+button.danger{background:#a93248}
+.top{height:60px;display:flex;align-items:center;gap:14px;padding:0 16px;background:#0d1522;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{font-size:17px;font-weight:800}
+.brand b{color:#71a0ff}
+.hamb{font-size:20px;padding:8px 12px}
+.layout{display:flex;min-height:calc(100vh - 60px)}
+aside{width:245px;flex-shrink:0;background:#0d1522;border-right:1px solid var(--line);padding:18px 12px}
+.label{font-size:10px;color:#71829b;letter-spacing:1.5px;padding:8px 12px}
+.nav{display:block;width:100%;text-align:left;background:transparent;color:#aab8cc;margin:4px 0;padding:13px}
+.nav.active{background:#172844;color:white;border:1px solid #294a7b}
+.main{padding:24px;width:100%;max-width:1400px;margin:auto}
+.page{display:none}
+.page.active{display:block}
+h1{font-size:24px;margin:0 0 7px}
+h2{font-size:17px;margin:0 0 16px}
+.sub,.hint,.muted{color:var(--muted);font-size:13px}
+.sub{margin:0 0 22px}
+.panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:17px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:18px 0}
+.metric small{display:block;color:var(--muted);margin-bottom:10px}
+.metric strong{font-size:23px}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.field label{display:block;color:#a9b8cd;font-size:12px;margin-bottom:7px}
+.field input,.field select,.field textarea{width:100%;padding:12px;background:#09111d;border:1px solid #34445c;border-radius:9px;color:white}
+.field textarea{min-height:75px}
 .full{grid-column:1/-1}
-.hidden{display:none}
-.memberrow{
- display:flex;align-items:center;justify-content:space-between;
- padding:11px;border-bottom:1px solid #283448;
- font-size:13px;gap:8px
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.small{padding:7px 10px;font-size:12px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:680px}
+th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);font-size:12px;white-space:nowrap}
+th{color:#91a5c2;background:#0d1726}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.member{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px;background:#0d1726;border:1px solid var(--line);border-radius:10px;margin:9px 0}
+.meta{color:var(--muted);font-size:12px;margin-top:5px}
+.pill{background:#1a2d49;color:#a9c9ff;border-radius:20px;padding:5px 8px;font-size:11px}
+.overlay{display:none}
+.hint{line-height:1.6;margin-top:12px}
+@media(max-width:760px){
+aside{position:fixed;z-index:10;top:60px;bottom:0;left:0;width:270px;transform:translateX(-105%);transition:.2s;box-shadow:12px 0 30px #0008}
+aside.open{transform:translateX(0)}
+.overlay.show{display:block;position:fixed;inset:60px 0 0;background:#0009;z-index:9}
+.main{padding:18px 13px}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.form{grid-template-columns:1fr}
+.full{grid-column:auto}
 }
-.memberrow:last-child{border:0}
-.trade{
- background:#151f2e;border:1px solid #29394e;
- border-radius:10px;padding:13px;margin:10px 0;
-}
-.tradehead{display:flex;justify-content:space-between;gap:8px}
-.trade p{font-size:12px;color:#9aa8ba;line-height:1.7;margin:9px 0}
-.trade strong{font-size:14px}
-.tag{font-size:10px;padding:5px 8px;border-radius:6px;background:#26374d}
-.empty{text-align:center;padding:25px;color:#8995a8;font-size:13px}
-hr{border:0;border-top:1px solid #283448;margin:15px 0}
-.footer{text-align:center;color:#65758b;font-size:11px;padding:20px}
 </style>
 </head>
-
 <body>
 
-<header>
-<h1>Trading P&L Tracker</h1>
-<div class="sub">PERSONAL TRADING DASHBOARD · OFFLINE MODE</div>
+<header class="top">
+<button class="hamb" id="menu">☰</button>
+<div class="brand">TRADING <b>P&amp;L</b> TRACKER</div>
+<span style="margin-left:auto;color:#91a1b8;font-size:11px">PERSONAL DASHBOARD</span>
 </header>
 
-<div class="cards">
- <div class="card">
-  <small>Total P&L</small>
-  <h2 id="total">₹0</h2>
- </div>
- <div class="card">
-  <small>Total Trades</small>
-  <h2 id="count">0</h2>
- </div>
- <div class="card">
-  <small>Total Profit</small>
-  <h2 class="green" id="profit">₹0</h2>
- </div>
- <div class="card">
-  <small>Total Loss</small>
-  <h2 class="red" id="loss">₹0</h2>
- </div>
-</div>
+<div class="overlay" id="overlay"></div>
 
-<!-- MEMBERS -->
+<div class="layout">
+<aside id="sidebar">
+<div class="label">MAIN MENU</div>
+
+<button class="nav active" data-page="members">♙ &nbsp; Members Details</button>
+<button class="nav" data-page="trade">＋ &nbsp; Add New Trade</button>
+<button class="nav" data-page="pnl">▥ &nbsp; Members-wise P&amp;L</button>
+<button class="nav" data-page="export">⇩ &nbsp; Export as Excel</button>
+
+<p class="hint">Data is stored on this device. Export Excel regularly as a backup.</p>
+</aside>
+
+<main class="main">
+
+<!-- MEMBERS DETAILS -->
+<section class="page active" id="page-members">
+<h1>Members Details</h1>
+<p class="sub">Manage members and subscription information.</p>
 
 <div class="panel">
-<h2>Members Management</h2>
+<h2 id="mTitle">Add Member</h2>
 
-<label>Add New Member</label>
-<input id="memberName" placeholder="Enter member name">
+<form id="memberForm">
+<input type="hidden" id="mId">
+
+<div class="form">
+<div class="field">
+<label>Member Name *</label>
+<input id="mName" required placeholder="Enter member name">
+</div>
+
+<div class="field">
+<label>Subscription Date</label>
+<input id="mDate" type="date">
+</div>
+
+<div class="field">
+<label>Subscription Price (₹)</label>
+<input id="mPrice" type="number" min="0" step=".01" placeholder="0">
+</div>
+
+<div class="field">
+<label>Phone Number</label>
+<input id="mPhone" type="tel" placeholder="Phone number">
+</div>
+</div>
 
 <div class="actions">
-<button class="primary" onclick="addMember()">+ Add Member</button>
+<button class="primary">Save Member</button>
+<button type="button" id="mClear">Clear</button>
 </div>
-
-<h3>All Members (<span id="memberCount">0</span>)</h3>
-<div id="memberList"></div>
+</form>
 </div>
-
-<!-- TRADE FORM -->
 
 <div class="panel">
-<h2 id="formTitle">Add New Trade</h2>
+<h2>All Members <span class="pill" id="mCount">0 Members</span></h2>
+<div id="members">
+<div class="empty">No members added yet.</div>
+</div>
+</div>
+</section>
 
-<div class="formgrid">
+<!-- ADD NEW TRADE -->
+<section class="page" id="page-trade">
+<h1>Add New Trade</h1>
+<p class="sub">Enter trade details. P&amp;L is calculated automatically.</p>
 
-<div class="full">
-<label>Member</label>
-<select id="member"></select>
+<div class="panel">
+<form id="tradeForm">
+<input type="hidden" id="tId">
+
+<div class="form">
+<div class="field">
+<label>Member *</label>
+<select id="tMember" required>
+<option value="">Select member</option>
+</select>
 </div>
 
-<div>
-<label>Date</label>
-<input id="date" type="date">
+<div class="field">
+<label>Date *</label>
+<input id="tDate" type="date" required>
 </div>
 
-<div>
+<div class="field">
 <label>Instrument</label>
 <select id="instrument">
 <option>NIFTY</option>
@@ -139,7 +171,7 @@ hr{border:0;border-top:1px solid #283448;margin:15px 0}
 </select>
 </div>
 
-<div>
+<div class="field">
 <label>Type</label>
 <select id="type">
 <option>CE</option>
@@ -150,7 +182,7 @@ hr{border:0;border-top:1px solid #283448;margin:15px 0}
 </select>
 </div>
 
-<div>
+<div class="field">
 <label>Position</label>
 <select id="position">
 <option>BUY</option>
@@ -158,503 +190,521 @@ hr{border:0;border-top:1px solid #283448;margin:15px 0}
 </select>
 </div>
 
-<div>
+<div class="field">
 <label>Strike Price</label>
-<input id="strike" type="number" placeholder="Optional">
+<input id="strike" placeholder="e.g. 24000">
 </div>
 
-<div>
+<div class="field">
 <label>Expiry</label>
 <input id="expiry" type="date">
 </div>
 
-<div>
-<label>Entry Price</label>
-<input id="entry" type="number" step="0.01" placeholder="0">
+<div class="field">
+<label>Entry Price *</label>
+<input id="entry" type="number" min="0" step=".01" required>
 </div>
 
-<div>
-<label>Exit Price</label>
-<input id="exit" type="number" step="0.01" placeholder="Blank = Open">
+<div class="field">
+<label>Exit Price (blank if open)</label>
+<input id="exit" type="number" min="0" step=".01">
 </div>
 
-<div>
+<div class="field">
 <label>Lots</label>
-<input id="lots" type="number" value="1" min="1">
+<input id="lots" type="number" min="0" value="1">
 </div>
 
-<div>
+<div class="field">
 <label>Lot Size / Quantity</label>
-<input id="size" type="number" value="65" min="1">
+<input id="qty" type="number" min="0" value="1">
 </div>
 
-<div>
+<div class="field">
 <label>Charges (₹)</label>
-<input id="charges" type="number" value="10" min="0" step="0.01">
+<input id="charges" type="number" min="0" step=".01" value="0">
 </div>
 
-<div class="full">
+<div class="field full">
 <label>Notes</label>
-<input id="notes" placeholder="Optional notes">
+<textarea id="notes" placeholder="Optional notes"></textarea>
 </div>
-
 </div>
 
 <div class="actions">
-<button class="primary" onclick="saveTrade()">Save Trade</button>
-<button onclick="resetForm()">Clear</button>
+<button class="primary" id="tSave">Save Trade</button>
+<button type="button" id="tClear">Clear</button>
 </div>
+</form>
+
+<p class="hint">
+BUY P&amp;L = (Exit − Entry) × Lots × Quantity − Charges.
+SELL uses (Entry − Exit). Blank exit price means OPEN trade.
+</p>
+</div>
+</section>
+
+<!-- MEMBERS WISE P&L -->
+<section class="page" id="page-pnl">
+<h1>Members-wise P&amp;L</h1>
+<p class="sub">Member performance and complete trade history.</p>
+
+<div class="grid">
+<div class="card metric">
+<small>Total Members</small>
+<strong id="totalMembers">0</strong>
 </div>
 
-<!-- MEMBER P&L -->
+<div class="card metric">
+<small>Total Trades</small>
+<strong id="totalTrades">0</strong>
+</div>
+
+<div class="card metric">
+<small>Gross Profit</small>
+<strong class="positive" id="gross">₹0.00</strong>
+</div>
+
+<div class="card metric">
+<small>Net P&amp;L</small>
+<strong id="net">₹0.00</strong>
+</div>
+</div>
 
 <div class="panel">
-<h2>Member-wise P&L</h2>
-<div id="memberPL"></div>
+<h2>Member Performance</h2>
+<div class="tablewrap">
+<table>
+<thead>
+<tr>
+<th>Member</th><th>Trades</th><th>Closed</th>
+<th>Open</th><th>Profit</th><th>Loss</th><th>Net P&amp;L</th>
+</tr>
+</thead>
+<tbody id="pnlRows"></tbody>
+</table>
+</div>
 </div>
 
-<!-- HISTORY -->
-
 <div class="panel">
-<h2>Trade History</h2>
-
-<label>Filter by Member</label>
-<select id="filterMember" onchange="render()">
-<option value="">All Members</option>
-</select>
-
-<label>Filter by Status</label>
-<select id="filterStatus" onchange="render()">
-<option value="">All Trades</option>
-<option value="OPEN">Open</option>
-<option value="CLOSED">Closed</option>
-</select>
-
-<div id="history"></div>
+<h2>All Trades</h2>
+<div class="tablewrap">
+<table>
+<thead>
+<tr>
+<th>Date</th><th>Member</th><th>Instrument</th><th>Type</th>
+<th>Position</th><th>Entry</th><th>Exit</th><th>Qty</th>
+<th>Charges</th><th>P&amp;L</th><th>Status</th><th>Action</th>
+</tr>
+</thead>
+<tbody id="tradesRows"></tbody>
+</table>
 </div>
+</div>
+</section>
 
-<!-- BACKUP -->
+<!-- EXPORT -->
+<section class="page" id="page-export">
+<h1>Export as Excel</h1>
+<p class="sub">Workbook contains an overall summary and a separate sheet for every member.</p>
 
 <div class="panel">
-<h2>Data Backup & Restore</h2>
-<div class="sub">Keep a backup of your trading records.</div>
+<h2>Excel Workbook</h2>
+<p class="muted">Includes member details, trade history, individual trade P&amp;L, profit/loss totals and open trade status.</p>
 
 <div class="actions">
-<button class="success" onclick="exportData()">Download Backup</button>
-<button onclick="document.getElementById('restoreFile').click()">Restore Backup</button>
+<button class="primary" id="excel">Download Excel Workbook</button>
+<button id="csv">Download All Trades CSV</button>
 </div>
 
-<input type="file" id="restoreFile" accept=".json,application/json"
-style="display:none" onchange="restoreData(event)">
-
-<button class="danger" style="width:100%" onclick="clearAll()">
-Delete All Data
-</button>
+<p class="hint">Excel file is generated on your phone. No internet connection is needed.</p>
 </div>
 
-<div class="footer">
-TRADING P&L TRACKER · PERSONAL DASHBOARD
+<div class="panel">
+<h2>Data Overview</h2>
+<div class="grid">
+<div class="metric"><small>Members</small><strong id="exMembers">0</strong></div>
+<div class="metric"><small>Trades</small><strong id="exTrades">0</strong></div>
+<div class="metric"><small>Open Trades</small><strong id="exOpen">0</strong></div>
+<div class="metric"><small>Net P&amp;L</small><strong id="exNet">₹0.00</strong></div>
+</div>
+</div>
+</section>
+
+</main>
 </div>
 
 <script>
-const DB_KEY = "trading_pl_tracker_v1";
+(()=>{
+'use strict';
 
-let members = [];
-let trades = [];
-let editingId = null;
+const KEY='trading_pl_tracker_v1';
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
-function loadData(){
- try{
-  const data = JSON.parse(localStorage.getItem(DB_KEY) || "{}");
-  members = Array.isArray(data.members) ? data.members : [];
-  trades = Array.isArray(data.trades) ? data.trades : [];
- }catch(e){
-  members = [];
-  trades = [];
- }
- render();
+let db={members:[],trades:[]};
+
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({
+'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+
+function load(){
+try{
+let x=JSON.parse(localStorage.getItem(KEY)||'{}');
+db.members=Array.isArray(x.members)?x.members.map(m=>
+typeof m==='string'?{id:uid(),name:m,subDate:'',subPrice:0,phone:''}:m
+):[];
+db.trades=Array.isArray(x.trades)?x.trades:[];
+}catch(e){
+db={members:[],trades:[]};
+}
 }
 
-function saveData(){
- localStorage.setItem(DB_KEY,JSON.stringify({
-  members,
-  trades
- }));
+function pnl(t){
+if(t.exit===''||t.exit===null||t.exit===undefined)return null;
+return (
+(t.position==='SELL'
+?Number(t.entry)-Number(t.exit)
+:Number(t.exit)-Number(t.entry)
+)*Number(t.lots||1)*Number(t.qty||1)
+)-Number(t.charges||0);
 }
 
-function money(value){
- return "₹" + Number(value || 0).toLocaleString("en-IN",{
-  minimumFractionDigits:2,
-  maximumFractionDigits:2
- });
+function name(id){
+return db.members.find(m=>m.id===id)?.name||'Deleted member';
 }
 
-function addMember(){
- const name = document.getElementById("memberName").value.trim();
-
- if(!name){
-  alert("Enter member name");
-  return;
- }
-
- if(members.some(m=>m.toLowerCase()===name.toLowerCase())){
-  alert("Member already exists");
-  return;
- }
-
- members.push(name);
- document.getElementById("memberName").value="";
- saveData();
- render();
-}
-
-function deleteMember(name){
- if(trades.some(t=>t.member===name)){
-  alert("This member has trades. Delete or reassign those trades first.");
-  return;
- }
-
- if(confirm("Delete member "+name+"?")){
-  members=members.filter(m=>m!==name);
-  saveData();
-  render();
- }
-}
-
-function calculate(t){
- if(t.exit===null || t.exit===undefined || t.exit===""){
-  return null;
- }
-
- const direction=t.position==="BUY"?1:-1;
- const quantity=Number(t.lots)*Number(t.size);
-
- return (
-  (Number(t.exit)-Number(t.entry))
-  * quantity * direction
- )-Number(t.charges || 0);
-}
-
-function saveTrade(){
-
- const member=document.getElementById("member").value;
- const date=document.getElementById("date").value;
- const entry=document.getElementById("entry").value;
- const lots=Number(document.getElementById("lots").value);
- const size=Number(document.getElementById("size").value);
- const exitValue=document.getElementById("exit").value;
-
- if(!member){
-  alert("First add a member");
-  return;
- }
-
- if(!date || entry==="" || Number(entry)<0 ||
-    lots<=0 || size<=0){
-  alert("Please enter valid trade details");
-  return;
- }
-
- if(exitValue!=="" && Number(exitValue)<0){
-  alert("Invalid exit price");
-  return;
- }
-
- const trade={
-  id:editingId || Date.now().toString(),
-  member,
-  date,
-  instrument:document.getElementById("instrument").value,
-  type:document.getElementById("type").value,
-  position:document.getElementById("position").value,
-  strike:document.getElementById("strike").value,
-  expiry:document.getElementById("expiry").value,
-  entry:Number(entry),
-  exit:exitValue===""?null:Number(exitValue),
-  lots,
-  size,
-  charges:Number(document.getElementById("charges").value||0),
-  notes:document.getElementById("notes").value
- };
-
- if(editingId){
-  trades=trades.map(t=>t.id===editingId?trade:t);
- }else{
-  trades.unshift(trade);
- }
-
- saveData();
- resetForm();
- render();
- alert("Trade saved successfully");
-}
-
-function editTrade(id){
- const t=trades.find(x=>x.id===id);
- if(!t)return;
-
- editingId=id;
-
- const fields={
-  member:t.member,
-  date:t.date,
-  instrument:t.instrument,
-  type:t.type,
-  position:t.position,
-  strike:t.strike,
-  expiry:t.expiry,
-  entry:t.entry,
-  exit:t.exit??"",
-  lots:t.lots,
-  size:t.size,
-  charges:t.charges,
-  notes:t.notes
- };
-
- Object.keys(fields).forEach(key=>{
-  document.getElementById(key).value=fields[key]??"";
- });
-
- document.getElementById("formTitle").textContent="Edit Trade";
- document.getElementById("formTitle").scrollIntoView({
-  behavior:"smooth",block:"center"
- });
-}
-
-function deleteTrade(id){
- if(confirm("Delete this trade permanently?")){
-  trades=trades.filter(t=>t.id!==id);
-  saveData();
-  render();
- }
-}
-
-function resetForm(){
- editingId=null;
-
- document.getElementById("formTitle").textContent="Add New Trade";
-
- document.getElementById("date").value=
- new Date().toISOString().slice(0,10);
-
- document.getElementById("strike").value="";
- document.getElementById("expiry").value="";
- document.getElementById("entry").value="";
- document.getElementById("exit").value="";
- document.getElementById("lots").value=1;
- document.getElementById("size").value=65;
- document.getElementById("charges").value=10;
- document.getElementById("notes").value="";
+function persist(){
+localStorage.setItem(KEY,JSON.stringify(db));
+render();
 }
 
 function render(){
 
- const memberSelect=document.getElementById("member");
- const oldMember=memberSelect.value;
+$('mCount').textContent=db.members.length+' Members';
 
- memberSelect.innerHTML='<option value="">Select Member</option>';
+$('members').innerHTML=db.members.length
+?db.members.map(m=>`
+<div class="member">
+<div>
+<b>${esc(m.name)}</b>
+<div class="meta">
+Subscription: ${esc(m.subDate||'Not set')} ·
+${money(m.subPrice)} · ${esc(m.phone||'No phone')}
+</div>
+</div>
+<div>
+<button class="small" data-em="${m.id}">Edit</button>
+<button class="small danger" data-dm="${m.id}">Delete</button>
+</div>
+</div>`).join()
+:'<div class="empty">No members added yet.</div>';
 
- members.forEach(m=>{
-  const o=document.createElement("option");
-  o.value=m;
-  o.textContent=m;
-  memberSelect.appendChild(o);
- });
+$('tMember').innerHTML='<option value="">Select member</option>'+
+db.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
 
- if(members.includes(oldMember)){
-  memberSelect.value=oldMember;
- }
+let closed=db.trades.map(pnl).filter(v=>v!==null);
+let net=closed.reduce((a,b)=>a+b,0);
+let gross=closed.filter(v=>v>0).reduce((a,b)=>a+b,0);
 
- const filter=document.getElementById("filterMember");
- const oldFilter=filter.value;
+$('totalMembers').textContent=db.members.length;
+$('totalTrades').textContent=db.trades.length;
+$('gross').textContent=money(gross);
+$('net').textContent=money(net);
+$('net').className=net>=0?'positive':'negative';
 
- filter.innerHTML='<option value="">All Members</option>';
+$('pnlRows').innerHTML=db.members.length
+?db.members.map(m=>{
+let ts=db.trades.filter(t=>t.memberId===m.id);
+let ps=ts.map(pnl).filter(v=>v!==null);
+let p=ps.filter(v=>v>0).reduce((a,b)=>a+b,0);
+let l=ps.filter(v=>v<0).reduce((a,b)=>a+b,0);
+let n=ps.reduce((a,b)=>a+b,0);
+return `<tr>
+<td>${esc(m.name)}</td><td>${ts.length}</td>
+<td>${ps.length}</td><td>${ts.length-ps.length}</td>
+<td class="positive">${money(p)}</td>
+<td class="negative">${money(l)}</td>
+<td class="${n>=0?'positive':'negative'}">${money(n)}</td>
+</tr>`;
+}).join()
+:'<tr><td colspan="7" class="empty">No members added yet.</td></tr>';
 
- members.forEach(m=>{
-  const o=document.createElement("option");
-  o.value=m;
-  o.textContent=m;
-  filter.appendChild(o);
- });
+$('tradesRows').innerHTML=db.trades.length
+?db.trades.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(t=>{
+let p=pnl(t);
+return `<tr>
+<td>${esc(t.date)}</td><td>${esc(name(t.memberId))}</td>
+<td>${esc(t.instrument)}</td><td>${esc(t.type)}</td>
+<td>${esc(t.position)}</td><td>${money(t.entry)}</td>
+<td>${t.exit===''?'—':money(t.exit)}</td>
+<td>${Number(t.lots||1)*Number(t.qty||1)}</td>
+<td>${money(t.charges)}</td>
+<td class="${p===null?'':p>=0?'positive':'negative'}">${p===null?'—':money(p)}</td>
+<td><span class="pill">${p===null?'OPEN':'CLOSED'}</span></td>
+<td><button class="small" data-et="${t.id}">Edit</button>
+<button class="small danger" data-dt="${t.id}">Delete</button></td>
+</tr>`;
+}).join()
+:'<tr><td colspan="12" class="empty">No trades added yet.</td></tr>';
 
- filter.value=members.includes(oldFilter)?oldFilter:"";
-
- // MEMBER LIST
-
- document.getElementById("memberCount").textContent=members.length;
-
- document.getElementById("memberList").innerHTML=
- members.length ? members.map(m=>`
- <div class="memberrow">
-  <strong>${escapeHTML(m)}</strong>
-  <button class="danger" onclick="deleteMember(${JSON.stringify(m).replace(/</g,"\\u003c")})">Delete</button>
- </div>
- `).join("") : '<div class="empty">No members added yet</div>';
-
- // OVERALL TOTALS
-
- let closed=trades.map(t=>calculate(t)).filter(v=>v!==null);
-
- let profit=closed.filter(v=>v>0).reduce((a,b)=>a+b,0);
- let loss=closed.filter(v=>v<0).reduce((a,b)=>a+b,0);
- let total=profit+loss;
-
- document.getElementById("total").textContent=money(total);
- document.getElementById("total").className=
- total>=0?"green":"red";
-
- document.getElementById("profit").textContent=money(profit);
- document.getElementById("loss").textContent=money(Math.abs(loss));
- document.getElementById("count").textContent=trades.length;
-
- // MEMBER P&L
-
- document.getElementById("memberPL").innerHTML=
- members.length ? members.map(m=>{
-  const mt=trades.filter(t=>t.member===m);
-  const vals=mt.map(calculate).filter(v=>v!==null);
-  const pnl=vals.reduce((a,b)=>a+b,0);
-
-  return `
-  <div class="memberrow">
-   <div>
-    <strong>${escapeHTML(m)}</strong>
-    <div class="muted">${mt.length} trades · ${mt.filter(t=>t.exit===null).length} open</div>
-   </div>
-   <strong class="${pnl>=0?'green':'red'}">${money(pnl)}</strong>
-  </div>`;
- }).join(""):'<div class="empty">Add members to view P&L</div>';
-
- // HISTORY
-
- const fm=filter.value;
- const fs=document.getElementById("filterStatus").value;
-
- const filtered=trades.filter(t=>
-  (!fm||t.member===fm) &&
-  (!fs||(fs==="OPEN"?t.exit===null:t.exit!==null))
- );
-
- document.getElementById("history").innerHTML=
- filtered.length ? filtered.map(t=>{
-  const pnl=calculate(t);
-  return `
-  <div class="trade">
-   <div class="tradehead">
-    <strong>${escapeHTML(t.instrument)} ${escapeHTML(t.type)}</strong>
-    <span class="tag">${t.exit===null?"OPEN":"CLOSED"}</span>
-   </div>
-
-   <p>
-    Member: <b>${escapeHTML(t.member)}</b><br>
-    Date: ${escapeHTML(t.date)}<br>
-    Position: ${escapeHTML(t.position)}<br>
-    Strike: ${escapeHTML(String(t.strike||"-"))}<br>
-    Expiry: ${escapeHTML(String(t.expiry||"-"))}<br>
-    Entry: ${money(t.entry)} |
-    Exit: ${t.exit===null?"OPEN":money(t.exit)}<br>
-    Lots: ${t.lots} × ${t.size}<br>
-    Charges: ${money(t.charges)}<br>
-    Notes: ${escapeHTML(t.notes||"-")}
-   </p>
-
-   <strong class="${pnl===null?'muted':pnl>=0?'green':'red'}">
-    ${pnl===null?"P&L: Pending":"P&L: "+money(pnl)}
-   </strong>
-
-   <div class="actions">
-    <button onclick="editTrade(${JSON.stringify(t.id)})">Edit</button>
-    <button class="danger" onclick="deleteTrade(${JSON.stringify(t.id)})">Delete</button>
-   </div>
-  </div>`;
- }).join(""):'<div class="empty">No trades found</div>';
+$('exMembers').textContent=db.members.length;
+$('exTrades').textContent=db.trades.length;
+$('exOpen').textContent=db.trades.filter(t=>pnl(t)===null).length;
+$('exNet').textContent=money(net);
+$('exNet').className=net>=0?'positive':'negative';
 }
 
-function escapeHTML(value){
- return String(value).replace(/[&<>"']/g,c=>({
-  "&":"&amp;",
-  "<":"&lt;",
-  ">":"&gt;",
-  '"':"&quot;",
-  "'":"&#39;"
- })[c]);
+function clearM(){
+$('memberForm').reset();
+$('mId').value='';
+$('mTitle').textContent='Add Member';
 }
 
-function exportData(){
- const backup={
-  app:"Trading P&L Tracker",
-  version:1,
-  exportedAt:new Date().toISOString(),
-  members,
-  trades
- };
-
- const blob=new Blob([JSON.stringify(backup,null,2)],{
-  type:"application/json"
- });
-
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");
- a.href=url;
- a.download="Trading_PL_Backup.json";
- a.click();
- URL.revokeObjectURL(url);
+function clearT(){
+$('tradeForm').reset();
+$('tId').value='';
+$('tDate').value=new Date().toISOString().slice(0,10);
+$('lots').value=1;
+$('qty').value=1;
+$('charges').value=0;
+$('tSave').textContent='Save Trade';
 }
 
-function restoreData(event){
- const file=event.target.files[0];
- if(!file)return;
+$('memberForm').onsubmit=e=>{
+e.preventDefault();
+let id=$('mId').value||uid();
+let m={
+id,
+name:$('mName').value.trim(),
+subDate:$('mDate').value,
+subPrice:Number($('mPrice').value||0),
+phone:$('mPhone').value.trim()
+};
+let old=db.members.find(x=>x.id===id);
+if(old)Object.assign(old,m);
+else db.members.push(m);
+clearM();
+persist();
+};
 
- const reader=new FileReader();
+$('mClear').onclick=clearM;
 
- reader.onload=function(){
-  try{
-   const data=JSON.parse(reader.result);
+$('tradeForm').onsubmit=e=>{
+e.preventDefault();
+if(!$('tMember').value){
+alert('Please add/select a member first.');
+return;
+}
+let id=$('tId').value||uid();
+let t={
+id,
+memberId:$('tMember').value,
+date:$('tDate').value,
+instrument:$('instrument').value,
+type:$('type').value,
+position:$('position').value,
+strike:$('strike').value,
+expiry:$('expiry').value,
+entry:Number($('entry').value),
+exit:$('exit').value===''?'':Number($('exit').value),
+lots:Number($('lots').value||1),
+qty:Number($('qty').value||1),
+charges:Number($('charges').value||0),
+notes:$('notes').value
+};
+let i=db.trades.findIndex(x=>x.id===id);
+if(i<0)db.trades.push(t);
+else db.trades[i]=t;
+clearT();
+persist();
+};
 
-   if(!Array.isArray(data.members)||
-      !Array.isArray(data.trades)){
-    throw new Error("Invalid backup");
-   }
+$('tClear').onclick=clearT;
 
-   if(!confirm("Restore backup? Current data will be replaced.")){
-    event.target.value="";
-    return;
-   }
+document.addEventListener('click',e=>{
+let b=e.target.closest('button');
+if(!b)return;
 
-   members=data.members;
-   trades=data.trades;
-
-   saveData();
-   render();
-   alert("Backup restored successfully");
-
-  }catch(e){
-   alert("Invalid backup file");
-  }
-
-  event.target.value="";
- };
-
- reader.readAsText(file);
+if(b.dataset.page){
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+$('page-'+b.dataset.page).classList.add('active');
+document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x===b));
+closeMenu();
 }
 
-function clearAll(){
- if(confirm("Delete ALL members and trades? This cannot be undone.")){
-  if(confirm("Are you absolutely sure? Download a backup first if needed.")){
-   members=[];
-   trades=[];
-   saveData();
-   resetForm();
-   render();
-  }
- }
+if(b.dataset.em){
+let m=db.members.find(x=>x.id===b.dataset.em);
+$('mId').value=m.id;
+$('mName').value=m.name;
+$('mDate').value=m.subDate||'';
+$('mPrice').value=m.subPrice||0;
+$('mPhone').value=m.phone||'';
+$('mTitle').textContent='Edit Member';
+scrollTo(0,0);
 }
 
-document.getElementById("date").value=
-new Date().toISOString().slice(0,10);
+if(b.dataset.dm){
+let id=b.dataset.dm;
+if(db.trades.some(t=>t.memberId===id)){
+alert('Delete this member’s trades first.');
+return;
+}
+if(confirm('Delete member?')){
+db.members=db.members.filter(m=>m.id!==id);
+persist();
+}
+}
 
-loadData();
+if(b.dataset.et){
+let t=db.trades.find(x=>x.id===b.dataset.et);
+document.querySelector('[data-page="trade"]').click();
+$('tId').value=t.id;
+Object.entries({
+tMember:t.memberId,tDate:t.date,instrument:t.instrument,
+type:t.type,position:t.position,strike:t.strike,
+expiry:t.expiry,entry:t.entry,exit:t.exit,lots:t.lots,
+qty:t.qty,charges:t.charges,notes:t.notes
+}).forEach(([k,v])=>$(k).value=v??'');
+$('tSave').textContent='Update Trade';
+scrollTo(0,0);
+}
+
+if(b.dataset.dt&&confirm('Delete trade?')){
+db.trades=db.trades.filter(t=>t.id!==b.dataset.dt);
+persist();
+}
+});
+
+const side=$('sidebar'),overlay=$('overlay');
+
+function closeMenu(){
+side.classList.remove('open');
+overlay.classList.remove('show');
+}
+
+$('menu').onclick=()=>{
+side.classList.toggle('open');
+overlay.classList.toggle('show');
+};
+overlay.onclick=closeMenu;
+
+function dl(data,type,file){
+let u=URL.createObjectURL(new Blob([data],{type}));
+let a=document.createElement('a');
+a.href=u;
+a.download=file;
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(()=>URL.revokeObjectURL(u),1500);
+}
+
+function sheet(n,rows){
+return `<Worksheet ss:Name="${esc(n.slice(0,31))}">
+<Table>${rows.map(r=>'<Row>'+
+r.map(v=>`<Cell><Data ss:Type="${typeof v==='number'?'Number':'String'}">${esc(v??'')}</Data></Cell>`).join('')
++'</Row>').join('')}</Table></Worksheet>`;
+}
+
+const heads=[
+'Date','Member','Instrument','Type','Position','Strike','Expiry',
+'Entry','Exit','Lots','Lot Size','Total Quantity','Charges',
+'Trade P&L','Status','Notes'
+];
+
+function rowsFor(id){
+return db.trades.filter(t=>!id||t.memberId===id).map(t=>{
+let p=pnl(t);
+return [
+t.date,name(t.memberId),t.instrument,t.type,t.position,
+t.strike,t.expiry,t.entry,t.exit,t.lots,t.qty,
+t.lots*t.qty,t.charges,p===null?'':p,
+p===null?'OPEN':'CLOSED',t.notes||''
+];
+});
+}
+
+$('excel').onclick=()=>{
+let done=db.trades.map(pnl).filter(v=>v!==null);
+
+let sum=[
+['TRADING P&L TRACKER'],
+['Generated',new Date().toLocaleString()],
+[],
+['Metric','Value'],
+['Members',db.members.length],
+['Trades',db.trades.length],
+['Open Trades',db.trades.filter(t=>pnl(t)===null).length],
+['Closed Trades',done.length],
+['Gross Profit',done.filter(v=>v>0).reduce((a,b)=>a+b,0)],
+['Gross Loss',done.filter(v=>v<0).reduce((a,b)=>a+b,0)],
+['Net P&L',done.reduce((a,b)=>a+b,0)]
+];
+
+let mem=[
+['Name','Subscription Date','Subscription Price','Phone','Trades','Open','Closed','Profit','Loss','Net'],
+...db.members.map(m=>{
+let ts=db.trades.filter(t=>t.memberId===m.id);
+let ps=ts.map(pnl).filter(v=>v!==null);
+return [
+m.name,m.subDate||'',Number(m.subPrice||0),m.phone||'',
+ts.length,ts.filter(t=>pnl(t)===null).length,ps.length,
+ps.filter(v=>v>0).reduce((a,b)=>a+b,0),
+ps.filter(v=>v<0).reduce((a,b)=>a+b,0),
+ps.reduce((a,b)=>a+b,0)
+];
+})
+];
+
+let sheets=sheet('Summary',sum)+sheet('Members',mem);
+
+db.members.forEach((m,i)=>{
+let ts=db.trades.filter(t=>t.memberId===m.id);
+let ps=ts.map(pnl).filter(v=>v!==null);
+let nm=(m.name||'Member').replace(/[\\/?*[\]:]/g,' ').slice(0,24)||'Member';
+
+sheets+=sheet(nm+' '+(i+1),[
+['Member',m.name],
+['Subscription Date',m.subDate||''],
+['Subscription Price',Number(m.subPrice||0)],
+['Phone',m.phone||''],
+[],
+['Total Trades',ts.length],
+['Open Trades',ts.filter(t=>pnl(t)===null).length],
+['Closed Trades',ps.length],
+['Total Profit',ps.filter(v=>v>0).reduce((a,b)=>a+b,0)],
+['Total Loss',ps.filter(v=>v<0).reduce((a,b)=>a+b,0)],
+['Net P&L',ps.reduce((a,b)=>a+b,0)],
+[],
+heads,
+...rowsFor(m.id)
+]);
+});
+
+let xml=`<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+${sheets}
+</Workbook>`;
+
+dl(xml,'application/vnd.ms-excel;charset=utf-8','Trading_PL_Tracker.xls');
+};
+
+$('csv').onclick=()=>{
+let all=[heads,...rowsFor()];
+let csv=all.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+dl('\ufeff'+csv,'text/csv;charset=utf-8','Trading_Trades.csv');
+};
+
+load();
+clearT();
+render();
+
+})();
 </script>
-
 </body>
 </html>
