@@ -6,141 +6,311 @@
 <title>Trading P&L Tracker</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#090d14;color:#f1f5f9;font-family:Arial,sans-serif;padding:18px}
-header{padding:18px 0;border-bottom:1px solid #293244}
-h1{font-size:25px;margin:0;color:#fff}
-.sub{color:#8995a8;font-size:12px;margin-top:8px}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
-.card{background:#151e2b;padding:17px;border:1px solid #283448;border-radius:13px}
-.card small{color:#9aa8ba}
-.card h2{margin:10px 0 0;font-size:22px}
-.green{color:#20d69a}.red{color:#ff647c}
-button{background:#1b293a;color:white;border:1px solid #35465d;border-radius:9px;padding:12px;font-weight:bold}
-.primary{background:#087fba;border:0}
-input,select{width:100%;padding:13px;margin:6px 0 13px;background:#111a27;color:white;border:1px solid #34445b;border-radius:8px}
-label{font-size:13px;color:#aab7c9}
-h3{margin-top:25px}
-.panel{background:#111a27;padding:16px;border-radius:13px;border:1px solid #283448}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
-.trade{background:#151e2b;border:1px solid #29374b;border-radius:10px;padding:13px;margin:10px 0}
-.trade p{font-size:13px;color:#aab7c9}
+body{margin:0;background:#090d14;color:#f1f5f9;font-family:Arial,sans-serif;padding:16px}
+header{padding:18px 0;border-bottom:1px solid #263244}
+h1{font-size:24px;margin:0;color:#fff}
+.sub{color:#8998ad;font-size:12px;margin-top:7px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
+.card{background:#151e2b;border:1px solid #28364a;border-radius:13px;padding:15px}
+.card small{color:#91a0b5}
+.card h2{margin:9px 0 0;font-size:22px}
+.green{color:#22c993}.red{color:#ff647c}
+h3{font-size:17px;margin:24px 0 12px}
+.panel{background:#111a27;border:1px solid #29384b;border-radius:14px;padding:15px;margin-bottom:16px}
+input,select{width:100%;background:#0a111c;color:white;border:1px solid #35465c;border-radius:9px;padding:13px;margin:6px 0 12px;font-size:14px;min-width:0}
+label{font-size:12px;color:#aab8ca}
+button{border:0;border-radius:9px;padding:12px 15px;font-size:13px;font-weight:bold;cursor:pointer;margin:3px}
+.primary{background:#087fba;color:white}
+.secondary{background:#26354a;color:white}
+.danger{background:#512332;color:#ff9aaa}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.trade{background:#151e2b;border:1px solid #29384b;border-radius:12px;padding:13px;margin:10px 0}
+.trade p{font-size:12px;color:#aab8ca;margin:7px 0}
+.trade strong{color:#fff}
+.badge{display:inline-block;padding:5px 9px;border-radius:6px;background:#26354a;font-size:11px}
+.empty{text-align:center;color:#8492a6;padding:25px 5px}
+.member-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #29384b}
+.member-row:last-child{border:0}
+.hidden{display:none}
+footer{text-align:center;color:#68788d;font-size:11px;padding:25px}
 </style>
 </head>
 <body>
+
 <header>
 <h1>Trading P&L Tracker</h1>
-<div class="sub">PERSONAL TRADING DASHBOARD</div>
+<div class="sub">PERSONAL TRADING DASHBOARD · OFFLINE MODE</div>
 </header>
 
 <div class="cards">
-<div class="card"><small>Total P&L</small><h2 id="total">₹0</h2></div>
-<div class="card"><small>Trades</small><h2 id="count">0</h2></div>
-<div class="card"><small>Profit</small><h2 class="green" id="profit">₹0</h2></div>
-<div class="card"><small>Loss</small><h2 class="red" id="loss">₹0</h2></div>
+<div class="card"><small>Total Net P&L</small><h2 id="total">₹0</h2></div>
+<div class="card"><small>Total Trades</small><h2 id="count">0</h2></div>
+<div class="card"><small>Total Profit</small><h2 class="green" id="profit">₹0</h2></div>
+<div class="card"><small>Total Loss</small><h2 class="red" id="loss">₹0</h2></div>
 </div>
 
+<h3>Member Management</h3>
+<div class="panel">
+<label>New Member Name</label>
+<input id="newMember" placeholder="Enter member name">
+<button class="primary" onclick="addMember()">+ Add Member</button>
+<div id="members"><div class="empty">No members added yet</div></div>
+</div>
+
+<h3>Trade Management</h3>
+<div class="panel">
 <div class="actions">
 <button class="primary" onclick="showForm()">+ Add Trade</button>
-<button onclick="exportData()">Backup JSON</button>
-<button onclick="document.getElementById('restore').click()">Restore</button>
-<input id="restore" type="file" accept=".json" hidden onchange="restoreData(event)">
+<button class="secondary" onclick="backup()">Backup Data</button>
+<button class="secondary" onclick="document.getElementById('restoreFile').click()">Restore Data</button>
+<input id="restoreFile" class="hidden" type="file" accept=".json" onchange="restore(event)">
 </div>
 
-<div id="form" class="panel" hidden>
-<h3>New Trade</h3>
-<label>Date</label><input id="date" type="date">
+<div id="form" class="hidden">
+<h3>New Trade Entry</h3>
+<label>Date</label>
+<input id="date" type="date">
+
 <label>Member</label>
-<select id="member">
-<option>Amit</option><option>Rudra Pratap (Student Forever)</option>
-<option>Rajesh</option><option>Samarth</option>
-<option>Rahul</option><option>John Jeevan</option>
-<option>Shekhar</option><option>Samir Dahiya</option>
-</select>
-<label>Instrument</label><select id="instrument"><option>NIFTY</option><option>BANKNIFTY</option><option>SENSEX</option><option>GOLD</option><option>SILVER</option></select>
-<label>Type</label><select id="type"><option>CE</option><option>PE</option><option>FUTURES</option></select>
-<label>Position</label><select id="position"><option>BUY</option><option>SELL</option></select>
-<label>Strike</label><input id="strike" type="number" placeholder="Strike price">
-<label>Expiry</label><input id="expiry" type="date">
-<label>Entry Price</label><input id="entry" type="number" step="0.01">
-<label>Exit Price (blank = OPEN)</label><input id="exit" type="number" step="0.01">
-<label>Lots</label><input id="lots" type="number" value="1">
-<label>Lot Size</label><input id="size" type="number" value="65">
-<label>Charges</label><input id="charges" type="number" value="10">
+<select id="member"></select>
+
+<div class="grid">
+<div><label>Instrument</label>
+<select id="instrument">
+<option>NIFTY</option><option>BANKNIFTY</option><option>SENSEX</option><option>FINNIFTY</option><option>STOCK</option><option>OTHER</option>
+</select></div>
+<div><label>Type</label>
+<select id="type"><option>CE</option><option>PE</option><option>FUTURES</option><option>STOCK</option></select></div>
+<div><label>Position</label>
+<select id="position"><option>BUY</option><option>SELL</option></select></div>
+<div><label>Strike Price</label>
+<input id="strike" type="number" placeholder="Strike"></div>
+</div>
+
+<label>Expiry Date</label>
+<input id="expiry" type="date">
+
+<div class="grid">
+<div><label>Entry Price</label><input id="entry" type="number" step="0.01" placeholder="0.00"></div>
+<div><label>Exit Price (blank = OPEN)</label><input id="exit" type="number" step="0.01" placeholder="0.00"></div>
+<div><label>Lots</label><input id="lots" type="number" min="1" value="1"></div>
+<div><label>Lot Size</label><input id="size" type="number" min="1" value="65"></div>
+</div>
+
+<label>Charges (₹)</label>
+<input id="charges" type="number" step="0.01" value="0">
+
+<label>Notes</label>
+<input id="notes" placeholder="Optional notes">
+
 <div class="actions">
 <button class="primary" onclick="saveTrade()">Save Trade</button>
-<button onclick="document.getElementById('form').hidden=true">Cancel</button>
+<button class="secondary" onclick="hideForm()">Cancel</button>
+</div>
 </div>
 </div>
 
 <h3>Trade History</h3>
-<div id="history"></div>
+<div class="panel">
+<label>Filter by Member</label>
+<select id="filterMember" onchange="render()">
+<option value="">All Members</option>
+</select>
+<label>Filter by Month</label>
+<input id="filterMonth" type="month" onchange="render()">
+<div id="history"><div class="empty">No trades recorded</div></div>
+</div>
+
+<h3>Member Reports</h3>
+<div class="panel">
+<label>Select Member</label>
+<select id="reportMember" onchange="report()"></select>
+<div id="reportData" class="empty">Add a member to view reports</div>
+</div>
+
+<footer>TRADING P&L TRACKER · YOUR DATA STAYS ON THIS DEVICE</footer>
 
 <script>
-let trades=JSON.parse(localStorage.getItem('trades')||'[]');
-function money(n){return '₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2})}
-function pnl(t){
-if(t.exit===''||t.exit===null)return 0;
-let direction=t.position==='BUY'?1:-1;
-return (Number(t.exit)-Number(t.entry))*direction*Number(t.lots)*Number(t.size)-Number(t.charges);
-}
-function showForm(){
-document.getElementById('form').hidden=false;
-document.getElementById('date').value=new Date().toISOString().slice(0,10);
-}
-function saveTrade(){
-let ids=['date','member','instrument','type','position','strike','expiry','entry','exit','lots','size','charges'];
-let t={};
-ids.forEach(id=>t[id]=document.getElementById(id).value);
-if(!t.date||!t.entry||!t.lots||!t.size){alert('Fill required fields');return}
-t.id=Date.now();
-trades.unshift(t);
-localStorage.setItem('trades',JSON.stringify(trades));
-document.getElementById('form').hidden=true;
+const KEY="tradingPLTracker_v1";
+let data=JSON.parse(localStorage.getItem(KEY)||'{"members":[],"trades":[]}');
+
+function persist(){
+localStorage.setItem(KEY,JSON.stringify(data));
 render();
 }
-function render(){
-let total=0,profit=0,loss=0;
-trades.forEach(t=>{
-let p=pnl(t);
-if(t.exit!==''&&t.exit!==null){total+=p;if(p>=0)profit+=p;else loss+=p}
+
+function money(n){
+return "₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
+}
+
+function pnl(t){
+if(t.exit===null||t.exit===undefined||t.exit==="")return null;
+let direction=t.position==="BUY"?1:-1;
+return ((Number(t.exit)-Number(t.entry))*Number(t.lots)*Number(t.size)*direction)-Number(t.charges||0);
+}
+
+function addMember(){
+let name=document.getElementById("newMember").value.trim();
+if(!name)return alert("Enter member name");
+if(data.members.some(m=>m.toLowerCase()===name.toLowerCase()))
+return alert("Member already exists");
+data.members.push(name);
+document.getElementById("newMember").value="";
+persist();
+}
+
+function deleteMember(name){
+if(data.trades.some(t=>t.member===name))
+return alert("This member has trades. Delete or reassign those trades first.");
+if(confirm("Delete member "+name+"?")){
+data.members=data.members.filter(m=>m!==name);
+persist();
+}
+}
+
+function showForm(){
+if(!data.members.length)return alert("First add at least one member");
+document.getElementById("form").classList.remove("hidden");
+document.getElementById("date").value=new Date().toISOString().slice(0,10);
+}
+
+function hideForm(){
+document.getElementById("form").classList.add("hidden");
+}
+
+function saveTrade(){
+let member=document.getElementById("member").value;
+let entry=Number(document.getElementById("entry").value);
+let lots=Number(document.getElementById("lots").value);
+let size=Number(document.getElementById("size").value);
+let exitValue=document.getElementById("exit").value;
+if(!member)return alert("Select a member");
+if(!document.getElementById("date").value)return alert("Select trade date");
+if(!entry||entry<0||lots<1||size<1)return alert("Enter valid entry, lots and lot size");
+if(exitValue!==""&&Number(exitValue)<0)return alert("Invalid exit price");
+if(exitValue!==""&&Number(exitValue)===0)return alert("Exit price must be greater than zero");
+
+data.trades.unshift({
+id:Date.now(),
+date:document.getElementById("date").value,
+member,
+instrument:document.getElementById("instrument").value,
+type:document.getElementById("type").value,
+position:document.getElementById("position").value,
+strike:document.getElementById("strike").value,
+expiry:document.getElementById("expiry").value,
+entry,
+exit:exitValue===""?null:Number(exitValue),
+lots,size,
+charges:Number(document.getElementById("charges").value)||0,
+notes:document.getElementById("notes").value
 });
-document.getElementById('total').textContent=money(total);
-document.getElementById('total').className=total>=0?'green':'red';
-document.getElementById('profit').textContent=money(profit);
-document.getElementById('loss').textContent=money(loss);
-document.getElementById('count').textContent=trades.length;
-document.getElementById('history').innerHTML=trades.map(t=>{
-let p=pnl(t),open=t.exit===''||t.exit===null;
+hideForm();
+persist();
+alert("Trade saved successfully");
+}
+
+function closeTrade(id){
+let t=data.trades.find(x=>x.id===id);
+let value=prompt("Enter Exit Price");
+if(value===null||value.trim()===""||!Number.isFinite(Number(value))||Number(value)<=0)
+return alert("Enter a valid exit price");
+t.exit=Number(value);
+persist();
+}
+
+function deleteTrade(id){
+if(confirm("Delete this trade permanently?")){
+data.trades=data.trades.filter(t=>t.id!==id);
+persist();
+}
+}
+
+function render(){
+let closed=data.trades.filter(t=>pnl(t)!==null);
+let total=closed.reduce((s,t)=>s+pnl(t),0);
+let profit=closed.reduce((s,t)=>s+Math.max(0,pnl(t)),0);
+let loss=closed.reduce((s,t)=>s+Math.min(0,pnl(t)),0);
+document.getElementById("total").textContent=money(total);
+document.getElementById("total").className=total>=0?"green":"red";
+document.getElementById("count").textContent=data.trades.length;
+document.getElementById("profit").textContent=money(profit);
+document.getElementById("loss").textContent=money(loss);
+
+document.getElementById("members").innerHTML=data.members.length?
+data.members.map(m=>`<div class="member-row"><strong>${esc(m)}</strong><button class="danger" onclick="deleteMember(${JSON.stringify(m).replace(/'/g,"&#39;")})">Delete</button></div>`).join(""):'<div class="empty">No members added yet</div>';
+
+let options=data.members.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join("");
+document.getElementById("member").innerHTML=options;
+document.getElementById("filterMember").innerHTML='<option value="">All Members</option>'+options;
+document.getElementById("reportMember").innerHTML=options||'<option value="">No members</option>';
+
+let fm=document.getElementById("filterMember").value;
+let month=document.getElementById("filterMonth").value;
+let trades=data.trades.filter(t=>(!fm||t.member===fm)&&(!month||t.date.startsWith(month)));
+
+document.getElementById("history").innerHTML=trades.length?trades.map(t=>{
+let result=pnl(t);
 return `<div class="trade">
-<strong>${t.instrument} ${t.type} ${t.position}</strong>
-<p>${t.member} | ${t.date} | Strike: ${t.strike||'-'}</p>
-<p>Entry: ${t.entry} | Exit: ${open?'OPEN':t.exit}</p>
-<p>Lots: ${t.lots} × ${t.size}</p>
-<strong class="${p>=0?'green':'red'}">${open?'OPEN':money(p)}</strong>
-<button onclick="removeTrade(${t.id})" style="float:right">Delete</button>
-</div>`;
-}).join('')||'<p>No trades recorded yet.</p>';
+<div><strong>${esc(t.instrument)} ${esc(t.type)} ${esc(t.position)}</strong> <span class="badge">${result===null?"OPEN": "CLOSED"}</span></div>
+<p>${esc(t.member)} · ${esc(t.date)} · Strike: ${esc(t.strike||"-")}</p>
+<p>Entry: ${money(t.entry)} · Exit: ${result===null?"Open":money(t.exit)}</p>
+<p>Lots: ${t.lots} × ${t.size} · Charges: ${money(t.charges)}</p>
+<strong class="${result===null?"":result>=0?"green":"red"}">${result===null?"OPEN":money(result)}</strong>
+<div class="actions">
+${result===null?`<button class="primary" onclick="closeTrade(${t.id})">Close Trade</button>`:""}
+<button class="danger" onclick="deleteTrade(${t.id})">Delete</button>
+</div></div>`;
+}).join(""):'<div class="empty">No trades found</div>';
+
+report();
 }
-function removeTrade(id){
-if(confirm('Delete this trade?')){
-trades=trades.filter(t=>t.id!==id);
-localStorage.setItem('trades',JSON.stringify(trades));render();
-}}
-function exportData(){
-let blob=new Blob([JSON.stringify(trades,null,2)],{type:'application/json'});
-let a=document.createElement('a');a.href=URL.createObjectURL(blob);
-a.download='TradingPLBackup.json';a.click();URL.revokeObjectURL(a.href);
+
+function report(){
+let m=document.getElementById("reportMember").value;
+let list=data.trades.filter(t=>t.member===m);
+let closed=list.filter(t=>pnl(t)!==null);
+let net=closed.reduce((s,t)=>s+pnl(t),0);
+let open=list.filter(t=>pnl(t)===null).length;
+document.getElementById("reportData").innerHTML=m?
+`<p>Total Trades: <strong>${list.length}</strong></p>
+<p>Closed Trades: <strong>${closed.length}</strong></p>
+<p>Open Trades: <strong>${open}</strong></p>
+<p>Net P&L: <strong class="${net>=0?"green":"red"}">${money(net)}</strong></p>`:
+'Add a member to view reports';
 }
-function restoreData(e){
-let f=e.target.files[0];if(!f)return;
-let r=new FileReader();
-r.onload=()=>{try{
-let d=JSON.parse(r.result);if(!Array.isArray(d))throw Error();
-trades=d;localStorage.setItem('trades',JSON.stringify(trades));render();
-alert('Backup restored');
-}catch(err){alert('Invalid backup file')}};
-r.readAsText(f);
+
+function esc(s){
+return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+
+function backup(){
+let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="TradingPL_Backup.json";
+a.click();
+URL.revokeObjectURL(a.href);
+}
+
+function restore(event){
+let file=event.target.files[0];
+if(!file)return;
+let reader=new FileReader();
+reader.onload=()=>{
+try{
+let saved=JSON.parse(reader.result);
+if(!Array.isArray(saved.members)||!Array.isArray(saved.trades))throw Error();
+data=saved;
+persist();
+alert("Backup restored successfully");
+}catch(e){alert("Invalid backup file");}
+};
+reader.readAsText(file);
+event.target.value="";
+}
+
 render();
 </script>
 </body>
