@@ -5,7 +5,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="Trading P&L Tracker"
+        android:label="Trading P&amp;L Tracker"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:usesCleartextTraffic="false">
 
