@@ -1,13 +1,12 @@
-
 package app.kaleenbhaiya.tradingpltracker
 
+import android.app.Activity
 import android.os.Bundle
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebChromeClient
-import androidx.activity.ComponentActivity
 
-class MainActivity : ComponentActivity() {
+class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -16,6 +15,7 @@ class MainActivity : ComponentActivity() {
 
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = WebChromeClient()
 
