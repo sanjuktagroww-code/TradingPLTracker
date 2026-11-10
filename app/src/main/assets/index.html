@@ -531,6 +531,180 @@ function renderHistory(){
 el("pnlMember").onchange=renderPnl;
 el("historyMonth").onchange=renderPnl;
 
-function downloadBlob(blob,name){
- const url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download=
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function refreshAll() {
+  renderMembers();
+  refreshMemberOptions();
+  if (db.members.length) {
+    renderPnl();
+  } else {
+    el("monthTrades").textContent = "0";
+    el("activeTrades").textContent = "0";
+    el("bookedProfit").textContent = money(0);
+    el("currentPnl").textContent = money(0);
+    el("historyMemberName").value = "";
+    renderActive([]);
+    renderHistory();
+  }
+}
+
+function exportCSV() {
+  const headers = [
+    "Member", "Entry Date", "Exit Date", "Instrument",
+    "Type", "Position", "Strike", "Expiry", "Entry Price",
+    "Exit Price", "Lots", "Lot Size", "Total Quantity",
+    "CMP", "Charges", "P&L", "Status", "Notes"
+  ];
+
+  const rows = db.trades.map(t => {
+    const m = db.members.find(x => x.id === t.memberId);
+    return [
+      m?.name || "", t.date, t.exitDate, t.instrument,
+      t.type, t.position, t.strike, t.expiry, t.entryPrice,
+      t.exitPrice, t.lots, t.qty, totalQty(t), t.cmp,
+      t.charges,
+      isClosed(t) ? bookedPnl(t) :
+        (t.cmp !== "" ? tradePnl(t, t.cmp) : ""),
+      isClosed(t) ? "Closed" : "Open", t.notes
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map(row => row.map(v =>
+      '"' + String(v ?? "").replace(/"/g, '""') + '"'
+    ).join(","))
+    .join("\r\n");
+
+  downloadBlob(
+    new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }),
+    "Trading_PL_Tracker.csv"
+  );
+}
+
+function exportExcel() {
+  const headers = [
+    "Member", "Entry Date", "Exit Date", "Instrument",
+    "Type", "Position", "Strike", "Expiry", "Entry Price",
+    "Exit Price", "Lots", "Lot Size", "Quantity",
+    "CMP", "Charges", "P&L", "Status", "Notes"
+  ];
+
+  const rows = db.trades.map(t => {
+    const m = db.members.find(x => x.id === t.memberId);
+    return [
+      m?.name || "", t.date, t.exitDate, t.instrument,
+      t.type, t.position, t.strike, t.expiry, t.entryPrice,
+      t.exitPrice, t.lots, t.qty, totalQty(t), t.cmp,
+      t.charges,
+      isClosed(t) ? bookedPnl(t) :
+        (t.cmp !== "" ? tradePnl(t, t.cmp) : ""),
+      isClosed(t) ? "Closed" : "Open", t.notes
+    ];
+  });
+
+  const table = [headers, ...rows].map(row =>
+    "<tr>" + row.map(v =>
+      "<td>" + esc(v) + "</td>"
+    ).join("") + "</tr>"
+  ).join("");
+
+  const html =
+    '<html><head><meta charset="UTF-8"></head><body>' +
+    '<table border="1">' + table + '</table>' +
+    '</body></html>';
+
+  downloadBlob(
+    new Blob([html], { type: "application/vnd.ms-excel" }),
+    "Trading_PL_Tracker.xls"
+  );
+}
+
+function exportMonthlyPDF() {
+  const mid = selectedMember();
+  const member = db.members.find(m => m.id === mid);
+  if (!member) {
+    alert("Please select a member first.");
+    return;
+  }
+
+  const month = el("historyMonth").value || currentMonth();
+  const closed = memberTrades(mid).filter(t =>
+    isClosed(t) &&
+    (t.exitDate || t.date || "").slice(0, 7) === month
+  );
+
+  const net = closed.reduce((s, t) => s + bookedPnl(t), 0);
+
+  const rows = closed.map(t =>
+    `<tr>
+      <td>${esc(t.date)}</td>
+      <td>${esc(t.exitDate || "-")}</td>
+      <td>${esc(t.instrument)}</td>
+      <td>${esc(t.type)}</td>
+      <td>${esc(t.position)}</td>
+      <td>${esc(t.strike)}</td>
+      <td>${money(t.entryPrice)}</td>
+      <td>${money(t.exitPrice)}</td>
+      <td>${totalQty(t)}</td>
+      <td>${money(t.charges)}</td>
+      <td>${money(bookedPnl(t))}</td>
+    </tr>`
+  ).join("");
+
+  const report = `<!doctype html>
+  <html><head><meta charset="UTF-8">
+  <title>Monthly Trading Report</title>
+  <style>
+  body{font-family:Arial;padding:25px;color:#111}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th,td{border:1px solid #999;padding:7px;text-align:left}
+  h2{margin-bottom:5px}
+  @media print{button{display:none}}
+  </style></head><body>
+  <h2>Trading P&L Monthly Report</h2>
+  <p>Member: ${esc(member.name)}</p>
+  <p>Month: ${esc(month)}</p>
+  <table>
+  <tr><th>Entry</th><th>Exit</th><th>Instrument</th>
+  <th>Type</th><th>Position</th><th>Strike</th>
+  <th>Entry Price</th><th>Exit Price</th><th>Qty</th>
+  <th>Charges</th><th>P&L</th></tr>
+  ${rows}
+  </table>
+  <h3>Total Closed Trades: ${closed.length}</h3>
+  <h2>Net Profit / Loss: ${money(net)}</h2>
+  <button onclick="window.print()">Print / Save as PDF</button>
+  </body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("PDF report popup was blocked. Please allow popups.");
+    return;
+  }
+  w.document.write(report);
+  w.document.close();
+}
+
+el("pdfReport").onclick = exportMonthlyPDF;
+el("exportExcel").onclick = exportExcel;
+el("exportCSV").onclick = exportCSV;
+
+function startApp() {
+  loadData();
+  refreshAll();
+  el("tradeDate").value = today();
+  el("historyMonth").value = currentMonth();
+}
+
+startApp();
+ 
