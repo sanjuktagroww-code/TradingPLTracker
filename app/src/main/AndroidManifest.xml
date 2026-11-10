@@ -7,8 +7,8 @@
     <application
         android:allowBackup="true"
         android:label="Kaleen Bhaiya"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@drawable/kaleen_bhaiya_icon_512"
+        android:roundIcon="@drawable/kaleen_bhaiya_icon_512"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:usesCleartextTraffic="false">
 
