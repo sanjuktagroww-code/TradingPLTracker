@@ -707,4 +707,11 @@ function startApp() {
 }
 
 startApp();
- 
+window.onerror = function(message, source, line, column) {
+  alert(
+    "JavaScript Error:\n" +
+    message +
+    "\nLine: " + line +
+    "\nColumn: " + column
+  );
+};
